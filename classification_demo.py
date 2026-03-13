@@ -55,29 +55,36 @@ st.markdown("---")
 # PART 2: REAL-WORLD APPLICATION
 # ==========================================
 st.header("Part 2: Applied Scenario - Water Pump Maintenance")
-st.markdown("Predicting if a water hand pump needs immediate maintenance to prevent a community from losing clean water access.")
+st.markdown("Predicting if a water hand pump needs immediate maintenance using multiple variables.")
 
 # Sidebar - Part 2
 st.sidebar.header("Part 2: Pump Features")
 pump_age = st.sidebar.slider("Pump Age (Years)", min_value=0.0, max_value=20.0, value=5.0, step=0.5, key="age_slider")
+daily_usage = st.sidebar.slider("Daily Usage (Liters)", min_value=100, max_value=5000, value=1500, step=100, key="usage_slider")
+months_since_inspection = st.sidebar.slider("Months Since Inspection", min_value=0, max_value=24, value=6, step=1, key="inspection_slider")
 
-# Applied Math (Hidden fixed weights mapping age to failure probability)
-w_pump = 0.6  # Rate at which aging increases failure risk
-b_pump = -6.0 # Baseline risk (negative means low risk at 0 years)
+# Applied Math (Hidden fixed weights mapping features to failure probability)
+w_age = 0.3 
+w_usage = 0.0005 
+w_inspection = 0.2
+b_pump = -4.5 
 
-z_pump = w_pump * pump_age + b_pump
+z_pump = (w_age * pump_age) + (w_usage * daily_usage) + (w_inspection * months_since_inspection) + b_pump
 prob_failure = 1 / (1 + np.exp(-z_pump))
 
+st.subheader("Multivariate Mathematical Formula")
+st.latex(r"P(y=1|X) = \frac{1}{1 + e^{-(w_1x_1 + w_2x_2 + w_3x_3 + b)}}")
+
 st.subheader("Probability of Imminent Failure")
-st.latex(f"P(\\text{{Failure}}|\\text{{Age}}={pump_age}) = {prob_failure:.4f}")
+st.latex(f"P(\\text{{Failure}}) = {prob_failure:.4f}")
 
 # Visual Representation - Part 2
-fig2, ax2 = plt.subplots(figsize=(8, 4))
+fig2, ax2 = plt.subplots(figsize=(8, 2))
 bar_color = 'red' if prob_failure >= 0.5 else 'green'
-ax2.bar(["Target Water Pump"], [prob_failure], color=bar_color, width=0.4)
-ax2.axhline(0.5, color='gray', linestyle='--', label="Dispatch Mechanic Threshold (0.5)")
-ax2.set_ylim(0, 1.1)
-ax2.set_ylabel("Probability of Failure")
+ax2.barh(["Target Water Pump"], [prob_failure], color=bar_color, height=0.4)
+ax2.axvline(0.5, color='gray', linestyle='--', label="Dispatch Mechanic Threshold (0.5)")
+ax2.set_xlim(0, 1.0)
+ax2.set_xlabel("Probability of Failure")
 ax2.legend()
 st.pyplot(fig2)
 
@@ -88,6 +95,6 @@ else:
     st.success(f"**Status Normal:** Failure probability is {prob_failure*100:.1f}%. No action needed.")
 
 st.markdown("""
-* **The Bar:** Shows the calculated risk of the specific pump failing based on its age.
-* **The Threshold:** If the bar crosses 0.5, the system automatically flags the pump for repair before it breaks.
+* **The Bar:** Shows the combined calculated risk based on Age, Usage, and Inspection history.
+* **The Threshold:** If the bar crosses 0.5, the system flags the pump for repair.
 """)
